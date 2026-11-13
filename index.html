@@ -1,0 +1,971 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Prototype AI Governance Dashboard: AI tool usage, spend limits and Shadow AI for a CFO. Sample data.">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<title>AI Governance Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: prototype banner, then an app frame (CFO reading order: actions > numbers > charts > shadow AI), then product notes for Parts 2 and 3 */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --surface-2:#F7F8FA; --line:#DEE2EA; --line-strong:#C7CDD8;
+  --fg:#151A23; --muted:#5A6374; --faint:#8A92A3;
+  --accent:#2C55D6; --accent-soft:#E7EDFC;
+  --ok:#1C8A57; --ok-soft:#E2F3EA;
+  --warn:#A9690F; --warn-soft:#FBEFD9;
+  --crit:#C2373A; --crit-soft:#FBE4E4;
+  --note:#FFF7D9; --note-line:#E3C24A; --note-fg:#4E3C00;
+  --track:#E8EBF1; --hatch:#D3D8E1;
+  --t1:#1E7A6C; --t2:#62BBAA; --t3:#B45E26; --t4:#E2A26F; --t5:#3366CC; --t6:#7357C2; --t7:#C24577;
+  --font-ui:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-data:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1117; --surface:#161A22; --surface-2:#1B2029; --line:#2A303C; --line-strong:#3A4252;
+    --fg:#E6E9EF; --muted:#9AA3B4; --faint:#6F7889;
+    --accent:#7F9CFF; --accent-soft:#1D2645;
+    --ok:#4FC28C; --ok-soft:#14291F; --warn:#E3A94E; --warn-soft:#2D2311; --crit:#F07474; --crit-soft:#341719;
+    --note:#2A2513; --note-line:#8E7A2C; --note-fg:#F1E0A2;
+    --track:#252B37; --hatch:#3A4252;
+    --t1:#3FB0A0; --t2:#8FD8CA; --t3:#D9814A; --t4:#F0C097; --t5:#6A95F0; --t6:#A58BEA; --t7:#E57AA2;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1117; --surface:#161A22; --surface-2:#1B2029; --line:#2A303C; --line-strong:#3A4252;
+  --fg:#E6E9EF; --muted:#9AA3B4; --faint:#6F7889;
+  --accent:#7F9CFF; --accent-soft:#1D2645;
+  --ok:#4FC28C; --ok-soft:#14291F; --warn:#E3A94E; --warn-soft:#2D2311; --crit:#F07474; --crit-soft:#341719;
+  --note:#2A2513; --note-line:#8E7A2C; --note-fg:#F1E0A2;
+  --track:#252B37; --hatch:#3A4252;
+  --t1:#3FB0A0; --t2:#8FD8CA; --t3:#D9814A; --t4:#F0C097; --t5:#6A95F0; --t6:#A58BEA; --t7:#E57AA2;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{margin:0;text-wrap:balance;line-height:1.25}
+p{margin:0}
+a{color:var(--accent)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.num{font-family:var(--font-data);font-variant-numeric:tabular-nums}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 56px;display:flex;flex-direction:column;gap:20px}
+
+/* Prototype banner */
+.proto{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between}
+.proto-l{display:flex;flex-direction:column;gap:4px;min-width:0}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.proto h1{font-size:22px;font-weight:700}
+.proto-sub{color:var(--muted)}
+.proto-r{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.jump{display:flex;gap:4px;flex-wrap:wrap}
+.jump a{font-size:13px;text-decoration:none;padding:6px 10px;border-radius:6px;color:var(--muted)}
+.jump a:hover{background:var(--surface);color:var(--fg)}
+.toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--note-line);background:var(--note);color:var(--note-fg);padding:7px 12px;border-radius:999px;cursor:pointer;font-weight:600;font-size:13px}
+.toggle .sw{width:28px;height:16px;border-radius:999px;background:var(--line-strong);position:relative;transition:background .15s}
+.toggle .sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--surface);transition:left .15s}
+.toggle[aria-pressed="true"] .sw{background:var(--note-line)}
+.toggle[aria-pressed="true"] .sw::after{left:14px}
+
+/* App frame */
+.app{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(15,20,30,.04),0 8px 24px rgba(15,20,30,.05)}
+.appbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 20px;padding:0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+.ws{display:flex;align-items:center;gap:8px;font-weight:600;white-space:nowrap;padding:12px 0}
+.ws-mark{width:22px;height:22px;border-radius:6px;background:var(--fg);color:var(--surface);display:grid;place-items:center;font-size:11px;font-weight:700}
+.where{color:var(--muted);font-size:13px}
+.glance{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.glance h2{font-size:16px;font-weight:700}
+.glance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 24px}
+.glance-grid>div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.glance-grid p{font-size:13.5px}
+.glance-grid a{font-size:13px;font-weight:600;text-decoration:none}
+@media (max-width:860px){.glance-grid{grid-template-columns:minmax(0,1fr)}}
+.howto{flex-basis:100%;list-style:none;margin:0;padding:10px 14px;display:flex;flex-wrap:wrap;gap:6px 22px;background:var(--surface);border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--muted);counter-reset:h}
+.howto li{counter-increment:h;display:flex;gap:6px}
+.howto li::before{content:counter(h);flex:none;width:18px;height:18px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:11px;font-weight:700;margin-top:1px}
+.howto b{color:var(--fg);font-weight:600}
+.bval{position:relative;padding-right:16px}
+.bval::after{content:"›";position:absolute;right:0;top:50%;transform:translateY(-50%);color:var(--faint);font-size:18px;line-height:1}
+.brow:hover .bval::after,tbody tr.click:hover .chev{color:var(--accent)}
+.chev{color:var(--faint);font-size:18px;line-height:1;width:12px;padding-left:0}
+.apphead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px 20px;padding:18px 20px 16px;border-bottom:1px solid var(--line)}
+.apphead h2{font-size:20px;font-weight:700}
+.asof{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;color:var(--muted);font-size:13px;margin-top:4px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted)}
+.chip.sample{background:var(--note);border-color:var(--note-line);color:var(--note-fg)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.field{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+select{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;padding:6px 28px 6px 10px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);background:var(--surface);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:500}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#0E1117}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#0E1117}}
+.appbody{background:var(--surface-2);padding:20px;display:flex;flex-direction:column;gap:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.ph{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 12px}
+.ph h3{font-size:15px;font-weight:600}
+.ph .q{color:var(--muted);font-size:13px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px}
+@media (max-width:960px){.grid2{grid-template-columns:minmax(0,1fr)}}
+
+/* Attention */
+.attn{display:flex;flex-direction:column;gap:0}
+.attn li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.attn li:first-child{border-top:0;padding-top:2px}
+.attn ul{list-style:none;margin:0;padding:0}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.crit{background:var(--crit-soft);color:var(--crit)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.neutral{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.linkbtn{background:none;border:0;color:var(--accent);cursor:pointer;font-weight:600;font-size:13px;padding:4px 0;white-space:nowrap}
+@media (max-width:560px){.attn li{grid-template-columns:minmax(0,1fr);gap:4px}}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+@media (max-width:960px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.kpis{grid-template-columns:minmax(0,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.kpi .lab{font-size:12px;color:var(--muted);font-weight:500}
+.kpi .val{font-size:26px;font-weight:600;letter-spacing:-.01em;font-family:var(--font-data)}
+.kpi .val small{font-size:14px;color:var(--muted);font-weight:500}
+.kpi .sub{font-size:12px;color:var(--muted)}
+.meter{height:6px;background:var(--track);border-radius:999px;overflow:hidden;position:relative}
+.meter span{position:absolute;inset:0 auto 0 0;border-radius:999px}
+
+/* Bullet chart */
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.rows{display:flex;flex-direction:column}
+.brow{display:grid;grid-template-columns:150px minmax(0,1fr) 168px;gap:12px;align-items:center;padding:9px 6px;margin:0 -6px;border:0;background:none;text-align:left;cursor:pointer;border-radius:6px;width:calc(100% + 12px)}
+.brow:hover{background:var(--surface-2)}
+.bname{display:flex;flex-direction:column;min-width:0}
+.bname b{font-weight:600;font-size:13px}
+.bname small{color:var(--muted);font-size:11px}
+.track{position:relative;height:18px;background:var(--track);border-radius:4px}
+.track .seg{position:absolute;top:0;bottom:0;left:0;border-radius:4px}
+.track .fixed{background:repeating-linear-gradient(135deg,var(--hatch) 0 4px,var(--track) 4px 8px)}
+.limit{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--fg);border-radius:1px}
+.bval{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:12px;text-align:right}
+.bval .main{font-family:var(--font-data);font-size:12px}
+.bval small{color:var(--muted);font-size:11px}
+.axis{display:grid;grid-template-columns:150px minmax(0,1fr) 168px;gap:12px;font-size:11px;color:var(--faint)}
+.axis .ticks{position:relative;height:14px}
+.axis .ticks span{position:absolute;transform:translateX(-50%);font-family:var(--font-data)}
+.axis .ticks span.hundred{color:var(--fg);font-weight:600}
+@media (max-width:620px){
+  .brow{grid-template-columns:minmax(0,1fr);grid-template-areas:"n" "t" "v";gap:6px;padding-block:10px}
+  .axis{grid-template-columns:minmax(0,1fr);grid-template-areas:"t"}
+  .brow .bname{grid-area:n}.brow .track{grid-area:t}.brow .bval{grid-area:v;align-items:flex-start;text-align:left}
+  .bname{flex-direction:row;flex-wrap:wrap;gap:0 8px;align-items:baseline}
+  .axis>span:first-child,.axis>span:last-child{display:none}.axis .ticks{grid-area:t}
+}
+.insight{font-size:13px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.insight b{font-weight:600}
+
+/* Trend */
+.chartbox{overflow-x:auto}
+.chartbox svg{display:block;width:100%;height:auto;min-width:420px}
+.chartbox svg text{font-family:var(--font-data);font-size:11px}
+
+/* Table */
+.tablebox{overflow-x:auto;margin:0 -2px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover{background:var(--surface-2)}
+.tname{font-weight:600}
+.tsub{color:var(--muted);font-size:12px}
+.unknown{color:var(--faint)}
+
+.foot{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:var(--muted);padding:4px 2px 0}
+.stale{color:var(--warn);font-weight:600}
+
+/* PM notes */
+.pm-note{display:none;gap:8px;align-items:flex-start;background:var(--note);border:1px dashed var(--note-line);color:var(--note-fg);border-radius:6px;padding:5px 10px;font-size:12px;line-height:1.4}
+.pm-note .n{flex:none;width:18px;height:18px;border-radius:50%;background:var(--note-line);color:var(--note);display:grid;place-items:center;font-weight:700;font-size:11px;margin-top:1px}
+.notes-on .pm-note{display:flex}
+
+/* Drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,14,22,.45);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--surface);border-left:1px solid var(--line);z-index:41;display:flex;flex-direction:column;box-shadow:-12px 0 32px rgba(10,14,22,.18);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.dh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 12px;border-bottom:1px solid var(--line)}
+.dh h3{font-size:18px}
+.dh .tsub{margin-top:2px}
+.dx{border:1px solid var(--line);background:var(--surface);border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:18px;line-height:1;flex:none}
+.db{padding:16px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:18px}
+.db h4{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin-bottom:8px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.stat .lab{font-size:11px;color:var(--muted)}
+.stat .v{font-family:var(--font-data);font-size:18px;font-weight:500}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.minirows{display:flex;flex-direction:column;gap:8px}
+.minirow{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:12.5px}
+.minirow .track{height:10px}
+.people{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.people li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:13px;align-items:center}
+.people li:first-child{border-top:0}
+.people label{display:flex;gap:8px;align-items:center;cursor:pointer}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.callout{font-size:13px;border-radius:8px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--line)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--surface);padding:10px 16px;border-radius:8px;font-size:13px;z-index:60;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.2)}
+
+/* Product notes */
+.notes{display:flex;flex-direction:column;gap:28px;padding-top:12px}
+.sec{display:flex;flex-direction:column;gap:14px;scroll-margin-top:16px}
+.sec>header{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--line-strong);padding-top:20px}
+.sec h2{font-size:22px;font-weight:700}
+.sec h3{font-size:16px;font-weight:600;margin-top:6px}
+.lead{color:var(--muted);max-width:72ch}
+.prose{max-width:72ch;display:flex;flex-direction:column;gap:10px}
+.prose ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.doc-table{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+.doc-table table{min-width:640px}
+.doc-table td,.doc-table th{padding:10px 12px}
+.doc-table code,.prose code{font-family:var(--font-data);font-size:12px;background:var(--surface-2);border:1px solid var(--line);padding:0 4px;border-radius:4px;overflow-wrap:anywhere}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;white-space:nowrap}
+.tag.good{background:var(--ok-soft);color:var(--ok)}
+.tag.mid{background:var(--warn-soft);color:var(--warn)}
+.tag.weak{background:var(--crit-soft);color:var(--crit)}
+.flow{display:grid;grid-template-columns:minmax(0,1.2fr) auto minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:center}
+.flow .col{display:flex;flex-direction:column;gap:8px}
+.fbox{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px}
+.fbox b{display:block;font-size:12px}
+.fbox span{color:var(--muted);font-size:12px}
+.arrow{color:var(--faint);font-size:18px;text-align:center}
+@media (max-width:760px){.flow{grid-template-columns:minmax(0,1fr)}.arrow{transform:rotate(90deg)}}
+.cards3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.cards3{grid-template-columns:minmax(0,1fr)}}
+.ccard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.ccard .k{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.ccard h3{margin:0}
+.ccard dl{margin:0;display:flex;flex-direction:column;gap:8px;font-size:13px}
+.ccard dt{font-weight:600;font-size:12px;color:var(--muted)}
+.ccard dd{margin:0}
+.assume{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.assume div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px}
+.assume b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:2px}
+.sources{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:4px;padding-left:18px;margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="top">
+  <section class="proto" aria-label="About this prototype">
+    <div class="proto-l">
+      <span class="eyebrow">APM take-home · Prototype</span>
+      <h1>AI Governance Dashboard</h1>
+      <p class="proto-sub">One screen for a CFO at a fictional 1,000-person company. All figures are sample data.</p>
+    </div>
+    <div class="proto-r">
+      <nav class="jump" aria-label="Jump to">
+        <a href="#screen">Part 1 · Screen</a>
+        <a href="#part2">Part 2 · Data plan</a>
+        <a href="#part3">Part 3 · Three charts</a>
+      </nav>
+      <button class="toggle" id="noteToggle" aria-pressed="true" type="button"><span class="sw" aria-hidden="true"></span>Show PM notes (why each part exists)</button>
+    </div>
+    <ol class="howto" aria-label="How to use this prototype">
+      <li><b>Change the Department filter</b> and every number, chart and list updates.</li>
+      <li><b>Click any row marked ›</b> to open its details.</li>
+      <li><b>Yellow numbered boxes</b> are PM notes explaining each decision. Hide them with the toggle.</li>
+      <li><b>Parts 2 and 3</b> (data plan and three charts) are below the dashboard.</li>
+    </ol>
+  </section>
+
+  <section class="glance" aria-labelledby="glanceH">
+    <h2 id="glanceH">Answers at a glance</h2>
+    <div class="glance-grid">
+      <div><span class="eyebrow">Part 1 · The screen</span><p>One page a CFO can read in 30 seconds: what needs a decision, AI spend against budget, how fast it is growing, money spent on unused seats, and AI tools nobody approved.</p><a href="#screen">See the screen ↓</a></div>
+      <div><span class="eyebrow">Part 2 · The data</span><p>Spend and seat data from each AI vendor's admin reports. Sign-in records, app permissions and expense reports to find unapproved tools. The HR system to group people by team. Midjourney has no admin reports, so its cost comes from expenses.</p><a href="#part2">See the data plan ↓</a></div>
+      <div><span class="eyebrow">Part 3 · Three charts</span><p><b>Spend vs limit</b> (are we over this month?), <b>spend trend with forecast</b> (where is it heading?) and <b>seat utilisation</b> (what are we paying for but not using?).</p><a href="#part3">See why these three ↓</a></div>
+    </div>
+  </section>
+
+  <!-- ================= PART 1: SCREEN ================= -->
+  <div class="app" id="screen">
+    <div class="appbar">
+      <div class="ws"><span class="ws-mark" aria-hidden="true">A</span>Arcwell Systems</div>
+      <span class="where">AI Governance · a new tab in the existing product</span>
+    </div>
+    <div class="apphead">
+      <div>
+        <h2>AI spend and usage · November 2026</h2>
+        <div class="asof"><span>Data as of 12 Nov 2026, synced daily</span><span class="chip sample">Sample data</span></div>
+      </div>
+      <div class="controls">
+        <label class="field" for="dept">Department
+          <select id="dept"></select>
+        </label>
+      </div>
+    </div>
+
+    <div class="appbody">
+      <div class="pm-note"><span class="n">1</span><span>Written for the CFO first, with IT/security second. The "as of" date is always visible because vendor usage APIs lag by up to a day, so this screen shows daily data, not live data.</span></div>
+
+      <section class="panel" aria-labelledby="attnH">
+        <div class="ph"><h3 id="attnH">Needs attention</h3><span class="q">Ranked by money at risk, then data risk</span></div>
+        <div class="attn"><ul id="attnList"></ul></div>
+        <div class="pm-note"><span class="n">2</span><span>The screen opens with actions, not charts. A CFO's first question is "what do I need to decide?", so every item links to the detail behind it.</span></div>
+      </section>
+
+      <section aria-label="Key numbers" class="kpis" id="kpis"></section>
+      <div class="pm-note"><span class="n">3</span><span>Four numbers, each answering one question. Shadow AI is counted here but its spend is never added to the totals, because we can't measure it. That keeps the money figures trustworthy.</span></div>
+
+      <div class="grid2">
+        <section class="panel" aria-labelledby="c1H">
+          <div class="ph"><h3 id="c1H">Chart 1 · Spend vs limit by tool</h3><span class="q">Which tools go over budget this month?</span></div>
+          <div class="legend">
+            <span><i style="background:var(--accent)"></i>Spent so far</span>
+            <span><i style="background:var(--accent-soft);border:1px solid var(--accent)"></i>Projected to month-end</span>
+            <span><i style="background:repeating-linear-gradient(135deg,var(--hatch) 0 3px,var(--track) 3px 6px)"></i>Fixed seat contract</span>
+            <span>◆ Vendor cap (stops spend)</span><span>◇ CloudEagle budget (alerts only)</span>
+          </div>
+          <div class="axis" aria-hidden="true"><span></span><div class="ticks" id="bAxis"></div><span></span></div>
+          <div class="rows" id="bullets"></div>
+          <p class="insight" id="c1insight"></p>
+          <div class="pm-note"><span class="n">4</span><span>One row per tool on a shared "% of limit" scale, so a $1K tool and an $18K tool can be compared. Seat-based tools always sit at 100% because you pay for what you contract, so they're shown as fixed. The variable tools carry the overrun risk.</span></div>
+        </section>
+
+        <section class="panel" aria-labelledby="c2H">
+          <div class="ph"><h3 id="c2H">Chart 2 · AI spend trend and forecast</h3><span class="q">How fast is it growing?</span></div>
+          <div class="chartbox" id="trend"></div>
+          <div class="legend" id="trendLegend"></div>
+          <p class="insight" id="c2insight"></p>
+          <div class="pm-note"><span class="n">5</span><span>Chart 1 shows this month and this chart shows the direction. The forecast holds seat contracts flat and grows pay-per-use spend at its recent rate, which is simple enough for a CFO to check.</span></div>
+        </section>
+      </div>
+
+      <div class="grid2">
+        <section class="panel" aria-labelledby="c3H">
+          <div class="ph"><h3 id="c3H">Chart 3 · Seat utilisation</h3><span class="q">Are we paying for seats nobody uses?</span></div>
+          <div class="legend">
+            <span><i style="background:var(--accent)"></i>Active (used in last 30 days)</span>
+            <span><i style="background:repeating-linear-gradient(135deg,var(--crit) 0 2px,var(--crit-soft) 2px 6px)"></i>Idle, paid for</span>
+          </div>
+          <div class="rows" id="seats"></div>
+          <p class="insight" id="c3insight"></p>
+          <div class="pm-note"><span class="n">6</span><span>Usage is shown in dollars, the CFO's unit. Idle seats are savings available now, by reclaiming them, or at renewal. People who have left the company come from the HR system.</span></div>
+        </section>
+
+        <section class="panel" aria-labelledby="shH">
+          <div class="ph"><h3 id="shH">Shadow AI · tools not approved</h3><span class="q">Spend unknown, so kept out of totals</span></div>
+          <div class="tablebox">
+            <table>
+              <thead><tr><th>Tool</th><th class="r">Users</th><th>Detected via</th><th>Risk</th><th>First seen</th><th><span class="sr" hidden>Open</span></th></tr></thead>
+              <tbody id="shadow"></tbody>
+            </table>
+          </div>
+          <div class="pm-note"><span class="n">7</span><span>A table, not a chart, because each row needs a decision: approve, review or block. Risk ranks tools that can read company data (calendar or Drive access) above tools that only have an account.</span></div>
+        </section>
+      </div>
+
+      <div class="pm-note"><span class="n">8</span><span>"By department" is a filter at the top, not a fourth chart. Try it: every number, chart and list re-scopes. The HR system maps each user to a department.</span></div>
+
+      <div class="foot" id="foot"></div>
+    </div>
+  </div>
+
+  <!-- ================= PRODUCT NOTES ================= -->
+  <div class="notes">
+    <section class="sec" id="problem">
+      <header><span class="eyebrow">Context</span><h2>The problem and the assumptions behind this screen</h2></header>
+      <div class="prose">
+        <p>Teams adopt AI tools faster than finance and IT can track them. Nobody can answer three questions: <b>which AI tools are in use, who uses them, and are we within what we approved to spend?</b> This screen answers them for a CFO, with the IT/security lead as the second reader.</p>
+        <p>The brief left several things open, so I made these assumptions. Each one would be checked with customers in week one.</p>
+      </div>
+      <div class="assume">
+        <div><b>Primary reader</b>CFO. IT/security is secondary and is served by the shadow AI table.</div>
+        <div><b>Spend limits</b>Imported from vendor consoles where they exist. Customers can set or override them in CloudEagle.</div>
+        <div><b>Freshness</b>Daily refresh, which matches how vendor usage APIs report.</div>
+        <div><b>Shadow AI</b>A separate list marked "spend unknown", never added to totals.</div>
+        <div><b>Customer</b>Mid-market, about 1,000 employees, 7 departments.</div>
+        <div><b>Approved tools (v1)</b>ChatGPT Enterprise and OpenAI API, Claude Enterprise and Anthropic API, Microsoft 365 and GitHub Copilot, Midjourney.</div>
+        <div><b>Usage unit</b>Active users vs paid seats. "Active" means used in the last 30 days.</div>
+        <div><b>Placement</b>A new AI Governance tab, built on CloudEagle's existing spend and discovery data.</div>
+      </div>
+    </section>
+
+    <section class="sec" id="part2">
+      <header><span class="eyebrow">Part 2</span><h2>API and data source plan</h2><p class="lead">In plain terms: we read spend and seat data from each AI vendor's admin reports, find unapproved tools from sign-in records, app permissions and expense reports, and use the HR system to group people by team. I started from the questions on the screen and worked back to the data. A person's work email links every source together.</p>
+        <p class="lead"><b>Terms used below:</b> <i>Admin API</i> is the reporting interface a vendor gives account owners. <i>SSO</i> is signing in with the company account. An <i>OAuth grant</i> is permission a user gives an app to read company data, such as their calendar.</p></header>
+
+      <h3>What the screen needs</h3>
+      <div class="doc-table"><table>
+        <thead><tr><th>Question on the screen</th><th>Data needed</th><th>Joined on</th></tr></thead>
+        <tbody>
+          <tr><td>Are we within budget?</td><td>Spend per tool per day, the limit, and where the limit came from</td><td>tool, month</td></tr>
+          <tr><td>Where is the money going?</td><td>Spend by tool, team and API project</td><td>user email → department; project → owning team</td></tr>
+          <tr><td>Are we paying for unused seats?</td><td>Paid seats, active users, last active date, employment status</td><td>user email</td></tr>
+          <tr><td>What's in use that we haven't approved?</td><td>Tool, users, first seen, how it was detected, data access granted</td><td>user email, app domain</td></tr>
+          <tr><td>What needs attention?</td><td>Worked out from the rows above, plus the forecast</td><td>-</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Tier 1 · Approved tools, from vendor admin APIs</h3>
+      <div class="doc-table"><table>
+        <thead><tr><th>Tool</th><th>Spend</th><th>Seats and activity</th><th>Limit</th><th>Data quality</th></tr></thead>
+        <tbody>
+          <tr><td class="tname">OpenAI API</td><td><code>GET /v1/organization/costs</code> (daily, by project; reconciles to the invoice)</td><td><code>/v1/organization/usage/completions</code> for tokens and requests</td><td>Project budgets in the OpenAI console</td><td><span class="tag good">Strong</span> Needs an Admin key</td></tr>
+          <tr><td class="tname">ChatGPT Enterprise</td><td>Seats × contract price</td><td>Workspace user analytics (aggregated, refreshed every 1–24 hours) plus the workspace member list</td><td>Seat count</td><td><span class="tag good">Strong</span> We don't need the Compliance API, because we never read conversation content</td></tr>
+          <tr><td class="tname">Anthropic API</td><td><code>GET /v1/organizations/cost_report</code> (USD)</td><td><code>/v1/organizations/usage_report/messages</code> by model, workspace, API key</td><td>Workspace spend limits in the Claude Console</td><td><span class="tag good">Strong</span> Admin key. Anthropic now recommends its newer Usage and Cost Analytics API for new integrations</td></tr>
+          <tr><td class="tname">Claude Enterprise</td><td>Seats × contract price</td><td>Admin member list and usage analytics</td><td>Seat count</td><td><span class="tag mid">Check</span> Confirm activity is available through an API, not only the console</td></tr>
+          <tr><td class="tname">Microsoft 365 Copilot</td><td>Licences × price, or the Microsoft invoice</td><td>Microsoft Graph <code>getMicrosoft365CopilotUsageUserDetail</code> (last activity per licensed user)</td><td>Licence count</td><td><span class="tag good">Strong</span> Needs <code>Reports.Read.All</code>. Unlicensed Copilot Chat use is not in the API</td></tr>
+          <tr><td class="tname">GitHub Copilot</td><td>Seats × price, plus premium request billing</td><td><code>GET /orgs/{org}/copilot/billing/seats</code> with <code>last_activity_at</code></td><td>Seat count</td><td><span class="tag mid">Good</span> Activity is kept 90 days and needs IDE telemetry. GitHub usernames must be mapped to work emails</td></tr>
+          <tr><td class="tname">Midjourney</td><td>Card and expense transactions only</td><td>None. No admin API, seat management or SSO</td><td>CloudEagle budget only</td><td><span class="tag weak">Weak</span> Labelled "estimated from expenses" on the screen</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Tier 2 · Shadow AI discovery</h3>
+      <div class="doc-table"><table>
+        <thead><tr><th>Source</th><th>What it shows</th><th>Examples</th></tr></thead>
+        <tbody>
+          <tr><td class="tname">Identity provider sign-ins</td><td>Logins to AI apps through SSO or "Sign in with Google/Microsoft"</td><td>Okta System Log API, Microsoft Entra sign-in logs (Graph), Google Workspace Reports API</td></tr>
+          <tr><td class="tname">OAuth grants</td><td>AI apps given access to company mail, calendar or Drive. <b>The highest-risk signal.</b></td><td>Google Workspace token audit, Entra OAuth permission grants</td></tr>
+          <tr><td class="tname">Expenses and cards</td><td>Who pays for an AI subscription, and how much</td><td>Ramp, Brex, Expensify, SAP Concur, NetSuite</td></tr>
+          <tr><td class="tname">Browser extension</td><td>Visits to AI tools, including personal accounts that SSO never sees</td><td>CloudEagle's discovery extension, if deployed</td></tr>
+          <tr><td class="tname">Network gateway (phase 2)</td><td>Traffic to AI domains across all devices</td><td>Zscaler, Netskope</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Tier 3 · Context</h3>
+      <div class="prose"><ul>
+        <li><b>HR system</b> (Workday, BambooHR, Rippling): department, manager and employment status. This powers the department filter and catches seats held by people who have left.</li>
+        <li><b>CloudEagle's own data:</b> budgets the customer sets, contracts and renewal dates, and the approved-apps list. That list is what makes a tool count as shadow AI.</li>
+      </ul></div>
+
+      <h3>How it flows</h3>
+      <div class="flow">
+        <div class="col">
+          <div class="fbox"><b>Vendor APIs</b><span>Costs, seats, last activity</span></div>
+          <div class="fbox"><b>Discovery signals</b><span>Sign-ins, OAuth grants, expenses, browser</span></div>
+          <div class="fbox"><b>HR system and CloudEagle</b><span>Departments, budgets, approved list</span></div>
+        </div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="fbox"><b>Daily sync and normalise</b><span>Match identities by email · amounts in USD · one definition of "active" (30 days) · each limit tagged with its source</span></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="fbox"><b>One AI usage table</b><span>tool × user × day → this dashboard and its alerts</span></div>
+      </div>
+
+      <h3>Rules we hold to</h3>
+      <div class="prose"><ul>
+        <li><b>Metadata only.</b> We never collect prompts or conversation content. Usage means who and when, not what.</li>
+        <li><b>Read-only access.</b> Every connector asks for the narrowest read scope, and the setup screen explains why each scope is needed.</li>
+        <li><b>Show where each number comes from.</b> Every figure carries its source and last sync time. Weak sources are labelled, not hidden.</li>
+      </ul></div>
+
+      <h3>Known gaps</h3>
+      <div class="prose"><ul>
+        <li><b>API keys aren't people.</b> API spend attaches to a project or key, so the screen attributes it project by project. The customer maps each project to an owning team.</li>
+        <li><b>Personal accounts</b> (free ChatGPT on a personal email) are invisible to SSO and vendor APIs. Only the browser extension or a network gateway can see them.</li>
+        <li><b>Midjourney</b> has no admin API and no SSO, so we rely on expenses alone. That's why it's marked low confidence.</li>
+        <li><b>Identity mismatch:</b> GitHub handles and email aliases need matching rules, plus a manual review queue for the rest.</li>
+      </ul></div>
+    </section>
+
+    <section class="sec" id="part3">
+      <header><span class="eyebrow">Part 3</span><h2>The three charts, and why</h2><p class="lead">The test for each chart was whether it leads the CFO to a decision. Together they cover this month, the direction of travel, and waste.</p></header>
+      <div class="cards3">
+        <article class="ccard">
+          <span class="k">Chart 1</span><h3>Spend vs limit by tool</h3>
+          <dl>
+            <dt>Question</dt><dd>Which tools will go over their limit this month?</dd>
+            <dt>Decision</dt><dd>Raise the limit, cap usage, or talk to the owning team.</dd>
+            <dt>Why this form</dt><dd>Bullet bars put spend, the projection and the limit in one row, on a shared "% of limit" scale. The limit marker shows whether it actually stops spend (vendor cap) or only alerts (CloudEagle budget).</dd>
+          </dl>
+        </article>
+        <article class="ccard">
+          <span class="k">Chart 2</span><h3>Spend trend and forecast</h3>
+          <dl>
+            <dt>Question</dt><dd>How fast is AI spend growing, and when will it go over budget?</dd>
+            <dt>Decision</dt><dd>Set next quarter's budget, or negotiate an enterprise agreement before growth forces it.</dd>
+            <dt>Why this form</dt><dd>Stacked columns show the total and the mix together. The budget line and a dashed forecast make the month spend crosses the budget easy to see.</dd>
+          </dl>
+        </article>
+        <article class="ccard">
+          <span class="k">Chart 3</span><h3>Seat utilisation</h3>
+          <dl>
+            <dt>Question</dt><dd>Are we paying for seats nobody uses?</dd>
+            <dt>Decision</dt><dd>Reclaim seats now, especially from people who have left, or reduce the count at renewal.</dd>
+            <dt>Why this form</dt><dd>Active vs idle bars, each labelled with the monthly cost of idle seats. It turns usage into money, and it's where CloudEagle's savings come from.</dd>
+          </dl>
+        </article>
+      </div>
+
+      <h3>On the screen, but not charts</h3>
+      <div class="prose"><ul>
+        <li><b>Needs attention</b> and the <b>four key numbers</b> are text and figures that summarise the charts.</li>
+        <li><b>Shadow AI</b> is a table with actions. Each row needs a decision, which a list handles better than a chart.</li>
+        <li><b>Department</b> is a filter that applies to the whole screen.</li>
+      </ul></div>
+
+      <h3>Charts I left out</h3>
+      <div class="doc-table"><table>
+        <thead><tr><th>Chart</th><th>Why it's not here</th></tr></thead>
+        <tbody>
+          <tr><td>Pie or donut of spend share</td><td>Shows no limit, and slices are hard to compare</td></tr>
+          <tr><td>Gauges</td><td>One number per graphic. Chart 1 shows every tool in the same space.</td></tr>
+          <tr><td>Token or API-call volume</td><td>Not the CFO's unit, and can't be compared across seat-based tools</td></tr>
+          <tr><td>Top users leaderboard</td><td>Invites blame and privacy concerns. Individuals appear only in drill-downs.</td></tr>
+          <tr><td>Shadow AI chart</td><td>People need to act on these, so a table with actions works better</td></tr>
+          <tr><td>Spend by department</td><td>Handled by the department filter</td></tr>
+        </tbody>
+      </table></div>
+      <div class="prose"><p><b>Trade-off:</b> there is no chart dedicated to security risk. That follows from making the CFO the primary reader. A security-first version would swap Chart 2 for a chart of risky access over time.</p></div>
+    </section>
+
+    <section class="sec" id="next">
+      <header><span class="eyebrow">Beyond week one</span><h2>Rollout and how we'd measure it</h2></header>
+      <div class="doc-table"><table>
+        <thead><tr><th>Phase</th><th>Scope</th><th>Moves on when</th></tr></thead>
+        <tbody>
+          <tr><td class="tname">0 · Approved tools</td><td>Vendor APIs, HR system, budgets. Charts 1–3 and the key numbers.</td><td>Numbers match vendor invoices to within 2% for 3 pilot customers</td></tr>
+          <tr><td class="tname">1 · Shadow AI</td><td>Identity provider sign-ins, OAuth grants, expenses. The shadow AI table and its actions.</td><td>Pilot customers act on (approve, review or block) at least 50% of detected tools within 30 days</td></tr>
+          <tr><td class="tname">2 · Act and enforce</td><td>Reclaim seats, block apps, budget alerts in Slack or email, export and share to finance or the board, browser extension for personal accounts</td><td>Measurable idle-seat savings reported by customers</td></tr>
+        </tbody>
+      </table></div>
+      <div class="prose"><ul>
+        <li><b>Adoption:</b> finance and IT leaders who open the tab each week.</li>
+        <li><b>Value:</b> dollars of idle seats reclaimed per customer, and share of AI spend that has a limit.</li>
+        <li><b>Speed:</b> days from detecting a shadow tool to a decision on it.</li>
+        <li><b>Guardrail:</b> support tickets about numbers not matching invoices.</li>
+      </ul></div>
+      <h3>Sources checked for Part 2</h3>
+      <ul class="sources">
+        <li><a href="https://developers.openai.com/cookbook/examples/completions_usage_api" target="_blank" rel="noopener">OpenAI: Usage and Costs API example</a></li>
+        <li><a href="https://help.openai.com/en/articles/11327494-compliance-api-vs-user-analytics-in-chatgpt-enterprise-edu" target="_blank" rel="noopener">OpenAI: Compliance API vs user analytics</a></li>
+        <li><a href="https://platform.claude.com/docs/en/build-with-claude/usage-cost-api" target="_blank" rel="noopener">Anthropic: Usage and Cost API</a></li>
+        <li><a href="https://learn.microsoft.com/en-us/graph/api/reportroot-getmicrosoft365copilotusageuserdetail" target="_blank" rel="noopener">Microsoft Graph: Copilot usage user detail</a></li>
+        <li><a href="https://docs.github.com/en/copilot/tutorials/roll-out-at-scale/assign-licenses/remind-inactive-users" target="_blank" rel="noopener">GitHub: finding inactive Copilot users</a></li>
+        <li><a href="https://docs.midjourney.com/hc/en-us/articles/27870607078285-Group-Plans-Corporate-Billing" target="_blank" rel="noopener">Midjourney: group plans and corporate billing</a></li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle" hidden>
+  <div class="dh"><div><h3 id="dTitle"></h3><div class="tsub" id="dSub"></div></div><button class="dx" id="dClose" type="button" aria-label="Close details">×</button></div>
+  <div class="db" id="dBody"></div>
+</aside>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function(){
+const MTD = 12/30; // 12 Nov of a 30-day month
+const ORG_BUDGET = 60000;
+const DEPTS = [
+  {id:'eng',name:'Engineering'},{id:'sales',name:'Sales'},{id:'cs',name:'Customer Success'},
+  {id:'ops',name:'Operations'},{id:'prod',name:'Product & Design'},{id:'mkt',name:'Marketing'},{id:'fin',name:'Finance'}
+];
+const DN = Object.fromEntries(DEPTS.map(d=>[d.id,d.name]));
+
+const TOOLS = [
+  {id:'cge',name:'ChatGPT Enterprise',vendor:'OpenAI',model:'seat',price:60,color:'--t1',renewal:'1 Mar 2027',
+   source:'ChatGPT Enterprise user analytics',sync:'12 Nov',
+   seats:{eng:[40,34],sales:[80,48],mkt:[50,41],cs:[50,30],fin:[15,9],ops:[30,18],prod:[35,30]}},
+  {id:'oai',name:'OpenAI API',vendor:'OpenAI',model:'usage',color:'--t2',limitSource:'vendor',limitOrg:10000,
+   source:'OpenAI Admin API (Costs)',sync:'12 Nov',
+   proj:{eng:5200,prod:1900,cs:1300,ops:600,mkt:400},budget:{eng:5500,prod:2000,cs:1500,ops:600,mkt:400},
+   projects:[['search-reranker','eng',3000],['code-review-bot','eng',2200],['roadmap-insights','prod',1900],['support-assistant','cs',1300],['ops-forecasting','ops',600],['campaign-copy','mkt',400]]},
+  {id:'cle',name:'Claude Enterprise',vendor:'Anthropic',model:'seat',price:40,color:'--t3',renewal:'15 Aug 2027',
+   source:'Claude admin member list',sync:'12 Nov',
+   seats:{eng:[70,64],sales:[10,6],mkt:[15,13],cs:[15,12],fin:[5,3],ops:[10,8],prod:[25,22]}},
+  {id:'ant',name:'Anthropic API',vendor:'Anthropic',model:'usage',color:'--t4',limitSource:'cloudeagle',limitOrg:5000,
+   source:'Anthropic Usage and Cost API',sync:'12 Nov',
+   proj:{eng:4300,prod:1200,cs:700},budget:{eng:3200,prod:1100,cs:700},
+   projects:[['agent-platform','eng',3100],['incident-summaries','eng',1200],['spec-assistant','prod',1200],['ticket-triage','cs',700]]},
+  {id:'m365',name:'Microsoft 365 Copilot',vendor:'Microsoft',model:'seat',price:30,color:'--t5',renewal:'1 Jul 2027',
+   source:'Microsoft Graph Copilot usage report',sync:'12 Nov',
+   seats:{eng:[40,22],sales:[120,58],mkt:[50,34],cs:[70,40],fin:[30,24],ops:[60,28],prod:[30,24]}},
+  {id:'ghc',name:'GitHub Copilot',vendor:'GitHub',model:'seat',price:39,color:'--t6',renewal:'1 Feb 2027',
+   source:'GitHub Copilot seats API',sync:'9 Nov',stale:true,
+   seats:{eng:[110,97],prod:[10,8]}},
+  {id:'mj',name:'Midjourney',vendor:'Midjourney',model:'usage',color:'--t7',limitSource:'cloudeagle',limitOrg:1000,
+   source:'Ramp card transactions (no admin API)',sync:'12 Nov',lowConfidence:true,
+   proj:{mkt:840,prod:360},budget:{mkt:700,prod:300}}
+];
+const TMAP = Object.fromEntries(TOOLS.map(t=>[t.id,t]));
+
+const MONTHS = ['Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan'];
+const FC = 6; // first forecast index
+const TREND = {
+  cge:[12000,12000,15000,15000,18000,18000,18000,18000],
+  oai:[4100,4900,5800,6900,8100,9400,10800,12400],
+  cle:[0,0,4000,4000,6000,6000,6000,6000],
+  ant:[1800,2300,3100,3900,4900,6200,7100,8200],
+  m365:[7500,7500,9000,12000,12000,12000,12000,12000],
+  ghc:[3900,3900,4290,4290,4680,4680,4680,4680],
+  mj:[400,550,700,850,1050,1200,1350,1550]
+};
+
+const IDLE = {
+  cge:[{n:'Tomás Ibarra',d:'sales',s:'Left company 18 Oct',left:true},{n:'Marcus Hale',d:'sales',s:'Never used (assigned 19 Aug)'},{n:'Grace Mensah',d:'ops',s:'Last active 47 days ago'},{n:'Daniel Okafor',d:'cs',s:'Last active 35 days ago'}],
+  m365:[{n:'Arjun Bhatia',d:'ops',s:'Left company 25 Sep',left:true},{n:'Tomás Ibarra',d:'sales',s:'Left company 18 Oct',left:true},{n:'Hannah Lindqvist',d:'fin',s:'Never used (assigned 2 Jul)'},{n:'Elena Sorokina',d:'ops',s:'Last active 63 days ago'},{n:'Lucía Benítez',d:'cs',s:'Last active 44 days ago'},{n:'Priya Raman',d:'sales',s:'Last active 41 days ago'},{n:'Chloe Dubois',d:'sales',s:'Last active 33 days ago'}],
+  cle:[{n:'Owen Fletcher',d:'eng',s:'Left company 2 Nov',left:true},{n:'Kenji Watanabe',d:'eng',s:'Last active 52 days ago'},{n:'Sofia Marchetti',d:'prod',s:'Last active 31 days ago'}],
+  ghc:[{n:'Owen Fletcher',d:'eng',s:'Left company 2 Nov',left:true},{n:'Ravi Menon',d:'eng',s:'Last active 38 days ago'}]
+};
+
+const SHADOW = [
+  {id:'otter',name:'Otter.ai',cat:'Meeting transcription',via:'OAuth grant',viaLong:'OAuth grant in Google Workspace',access:'Calendar and Drive (read)',risk:'high',first:'14 Oct',users:{sales:11,cs:7},sample:['Daniel Okafor','Chloe Dubois','Samuel Adeyemi']},
+  {id:'ffl',name:'Fireflies.ai',cat:'Meeting notes',via:'OAuth grant',viaLong:'OAuth grant in Google Workspace',access:'Calendar and meeting recordings',risk:'high',first:'29 Oct',users:{cs:6,sales:3},sample:['Lucía Benítez','Samuel Adeyemi']},
+  {id:'ds',name:'DeepSeek',cat:'Chat assistant',via:'Browser',viaLong:'Browser extension',access:'Pasted text; data may be stored outside approved regions',risk:'high',first:'3 Nov',users:{eng:5,prod:1},sample:['Kenji Watanabe','Nikolai Petrov']},
+  {id:'ppx',name:'Perplexity',cat:'AI search',via:'SSO sign-in',viaLong:'Sign in with Google',access:'Account only, no data access granted',risk:'medium',first:'2 Sep',users:{eng:9,mkt:8,sales:7,prod:6,ops:4},sample:['Mei Lin Tan','Isabel Costa','Nikolai Petrov']},
+  {id:'jas',name:'Jasper',cat:'Marketing copy',via:'Expenses',viaLong:'Card expense in Ramp',access:'Unknown',risk:'medium',first:'5 Oct',users:{mkt:2},sample:['Aisha Karim'],expense:490},
+  {id:'gam',name:'Gamma',cat:'Presentations',via:'SSO sign-in',viaLong:'Sign in with Google',access:'Account only, no data access granted',risk:'low',first:'21 Aug',users:{mkt:7,sales:5},sample:['Mei Lin Tan','Jonah Weiss']}
+];
+const RISK_ORDER = {high:0,medium:1,low:2};
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const k = v => v>=1000 ? '$'+(v/1000).toFixed(1)+'K' : '$'+Math.round(v).toLocaleString();
+const pct = v => Math.round(v*100)+'%';
+const sum = a => a.reduce((x,y)=>x+y,0);
+const SRC = {vendor:'vendor spend cap',cloudeagle:'CloudEagle budget',allocation:'department budget'};
+const SYM = {vendor:'◆',cloudeagle:'◇',allocation:'◇'};
+
+let dept = 'all';
+
+function view(){
+  const inD = d => dept==='all' || d===dept;
+  const tools = TOOLS.map(t=>{
+    const o = {t};
+    if(t.model==='seat'){
+      let seats=0,active=0;
+      for(const [d,[s,a]] of Object.entries(t.seats)) if(inD(d)){seats+=s;active+=a;}
+      Object.assign(o,{seats,active,idle:seats-active,proj:seats*t.price,limit:seats*t.price,idleCost:(seats-active)*t.price,present:seats>0});
+      o.leavers = (IDLE[t.id]||[]).filter(u=>u.left && inD(u.d));
+    } else {
+      let proj=0,limit=0;
+      for(const [d,v] of Object.entries(t.proj)) if(inD(d)) proj+=v;
+      for(const [d,v] of Object.entries(t.budget)) if(inD(d)) limit+=v;
+      if(dept==='all') limit=t.limitOrg;
+      const src = dept==='all' ? t.limitSource : 'allocation';
+      const p = limit? proj/limit : 0;
+      Object.assign(o,{proj,limit,mtd:Math.round(proj*MTD),src,p,status:p>1?'over':p>=0.9?'near':'ok',present:proj>0||limit>0});
+    }
+    return o;
+  }).filter(o=>o.present);
+  const total = sum(tools.map(o=>o.proj));
+  const budget = dept==='all' ? ORG_BUDGET : sum(tools.map(o=>o.limit));
+  const shadow = SHADOW.map(s=>{
+    const users = sum(Object.entries(s.users).filter(([d])=>inD(d)).map(([,v])=>v));
+    return {s,users};
+  }).filter(x=>x.users>0).sort((a,b)=>RISK_ORDER[a.s.risk]-RISK_ORDER[b.s.risk] || b.users-a.users);
+  // trend: org trend scaled by this view's share of each tool's November spend
+  const series = TOOLS.map(t=>{
+    const o = tools.find(x=>x.t.id===t.id);
+    const share = o ? o.proj/TREND[t.id][5] : 0;
+    return {t, vals:TREND[t.id].map(v=>Math.round(v*share))};
+  }).filter(x=>x.vals.some(v=>v>0));
+  return {tools,total,budget,shadow,series};
+}
+
+/* ---------- renderers ---------- */
+function renderAttention(V){
+  const items=[];
+  V.tools.filter(o=>o.t.model==='usage' && o.status==='over').sort((a,b)=>(b.proj-b.limit)-(a.proj-a.limit)).forEach(o=>{
+    items.push({sev:'crit',tag:'Over limit',text:`<b>${esc(o.t.name)}</b> is projected at ${pct(o.p)} of its ${SRC[o.src]} (${k(o.proj)} vs ${k(o.limit)})${o.t.lowConfidence?', estimated from expenses':''}.`,open:()=>toolDrawer(o.t.id),cta:'Review'});
+  });
+  const hi = V.shadow.find(x=>x.s.risk==='high');
+  if(hi) items.push({sev:'crit',tag:'Not approved',text:`<b>${esc(hi.s.name)}</b> has ${esc(hi.s.access.toLowerCase())} access for ${hi.users} users.`,open:()=>shadowDrawer(hi.s.id),cta:'Decide'});
+  const seatTools = V.tools.filter(o=>o.t.model==='seat');
+  const topIdle = seatTools.slice().sort((a,b)=>b.idleCost-a.idleCost)[0];
+  if(topIdle && topIdle.idle>0) items.push({sev:'warn',tag:'Idle seats',text:`${topIdle.idle} <b>${esc(topIdle.t.name)}</b> seats haven't been used in 30+ days, costing ${k(topIdle.idleCost)}/month.`,open:()=>toolDrawer(topIdle.t.id),cta:'Reclaim'});
+  const leaverSeats = seatTools.flatMap(o=>o.leavers.map(u=>({u,o})));
+  if(leaverSeats.length){
+    const people = new Set(leaverSeats.map(x=>x.u.n)).size;
+    const cost = sum(leaverSeats.map(x=>x.o.t.price));
+    items.push({sev:'warn',tag:'Former staff',text:`${people} ${people===1?'person who has':'people who have'} left still ${people===1?'holds':'hold'} ${leaverSeats.length} paid ${leaverSeats.length===1?'seat':'seats'} (${k(cost)}/month).`,open:leaversDrawer,cta:'Reclaim'});
+  }
+  V.tools.filter(o=>o.t.model==='usage' && o.status==='near').forEach(o=>{
+    items.push({sev:'warn',tag:'Near limit',text:`<b>${esc(o.t.name)}</b> is at ${pct(o.p)} of its ${SRC[o.src]}. ${o.src==='vendor'?'API requests stop when the cap is reached.':'This budget alerts only and does not block spend.'}`,open:()=>toolDrawer(o.t.id),cta:'Review'});
+  });
+  const list = $('#attnList'); list.innerHTML='';
+  if(!items.length){ list.innerHTML='<li><span class="pill ok">All clear</span><span>Nothing in this department needs a decision right now.</span><span></span></li>'; return; }
+  $('#attnH').textContent = `Needs attention (${items.length})`;
+  items.forEach(it=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span class="pill ${it.sev}">${it.tag}</span><span>${it.text}</span>`;
+    const b=document.createElement('button'); b.type='button'; b.className='linkbtn'; b.textContent=it.cta+' →'; b.onclick=it.open;
+    li.appendChild(b); list.appendChild(li);
+  });
+}
+
+function renderKPIs(V){
+  const p = V.total/V.budget;
+  const usage = V.tools.filter(o=>o.t.model==='usage');
+  const over = usage.filter(o=>o.status==='over').length, near = usage.filter(o=>o.status==='near').length;
+  const seat = V.tools.filter(o=>o.t.model==='seat');
+  const idleCost = sum(seat.map(o=>o.idleCost)), idle = sum(seat.map(o=>o.idle)), seats = sum(seat.map(o=>o.seats));
+  const high = V.shadow.filter(x=>x.s.risk==='high').length, susers = sum(V.shadow.map(x=>x.users));
+  const fixedOnly = usage.length===0;
+  const state = fixedOnly ? ['neutral','Fixed contracts'] : p>1 ? ['crit','Over budget'] : p>=0.9 ? ['warn','Near budget'] : ['ok','Within budget'];
+  const col = fixedOnly ? 'var(--accent)' : p>1?'var(--crit)':p>=0.9?'var(--warn)':'var(--ok)';
+  $('#kpis').innerHTML = `
+    <div class="kpi"><span class="lab">Projected AI spend, November</span><span class="val">${k(V.total)} <small>/ ${k(V.budget)}</small></span>
+      <div class="meter" role="img" aria-label="${pct(p)} of budget"><span style="width:${Math.min(p,1)*100}%;background:${col}"></span></div>
+      <span class="sub"><span class="pill ${state[0]}">${pct(p)} · ${state[1]}</span> ${fixedOnly?'all spend here is seat contracts':`of ${dept==='all'?'monthly budget':'department budget'}`}</span></div>
+    ${fixedOnly ? `<div class="kpi"><span class="lab">Tools over or near limit</span><span class="val">None</span>
+      <span class="sub">No pay-per-use tools in this department</span></div>` : `<div class="kpi"><span class="lab">Tools over or near limit</span><span class="val">${over+near} <small>of ${usage.length} pay-per-use</small></span>
+      <span class="sub">${over} over · ${near} near (90%+)</span></div>`}
+    <div class="kpi"><span class="lab">Idle seat cost</span><span class="val">${k(idleCost)}<small>/mo</small></span>
+      <span class="sub">${idle} of ${seats} paid seats idle · ${k(idleCost*12)}/yr</span></div>
+    <div class="kpi"><span class="lab">Shadow AI tools</span><span class="val">${V.shadow.length} <small>${high} high risk</small></span>
+      <span class="sub">${susers} users · spend not in totals</span></div>`;
+}
+
+const SCALE = 1.4; // bullet axis runs 0–140% of limit
+function renderBullets(V){
+  $('#bAxis').innerHTML = [0,0.5,1,1.4].map(v=>`<span class="${v===1?'hundred':''}" style="left:${v/SCALE*100}%">${v===1?'100% limit':pct(v)}</span>`).join('');
+  const rows = V.tools.slice().sort((a,b)=>{
+    if(a.t.model!==b.t.model) return a.t.model==='usage'?-1:1;
+    return a.t.model==='usage' ? b.p-a.p : b.proj-a.proj;
+  });
+  const box = $('#bullets'); box.innerHTML='';
+  rows.forEach(o=>{
+    const b=document.createElement('button'); b.type='button'; b.className='brow';
+    const lim = `<span class="limit" style="left:calc(${1/SCALE*100}% - 1px)"></span>`;
+    if(o.t.model==='seat'){
+      b.innerHTML=`<span class="bname"><b>${esc(o.t.name)}</b><small>${o.seats} seats · fixed</small></span>
+        <span class="track"><span class="seg fixed" style="width:${1/SCALE*100}%"></span>${lim}</span>
+        <span class="bval"><span class="main">${k(o.proj)} fixed</span><small>seat contract · renews ${o.t.renewal}</small></span>`;
+      b.title=`${o.t.name}: ${o.seats} seats × $${o.t.price} = ${k(o.proj)} per month`;
+    } else {
+      const c = o.status==='over'?'crit':o.status==='near'?'warn':'accent';
+      const pw = Math.min(o.p,SCALE)/SCALE*100, mw = Math.min(o.mtd/o.limit,SCALE)/SCALE*100;
+      const pillCls = o.status==='over'?'crit':o.status==='near'?'warn':'ok';
+      b.innerHTML=`<span class="bname"><b>${esc(o.t.name)}</b><small>pay per use${o.t.lowConfidence?' · estimated':''}</small></span>
+        <span class="track"><span class="seg" style="width:${pw}%;background:var(--${c==='accent'?'accent':c}-soft);outline:1px solid var(--${c})"></span><span class="seg" style="width:${mw}%;background:var(--${c})"></span>${lim}</span>
+        <span class="bval"><span class="main">${k(o.mtd)} → ${k(o.proj)} <span class="pill ${pillCls}">${pct(o.p)}</span></span><small>of ${k(o.limit)} ${SYM[o.src]} ${SRC[o.src]}</small></span>`;
+      b.title=`${o.t.name}: ${k(o.mtd)} spent so far, ${k(o.proj)} projected, limit ${k(o.limit)} (${SRC[o.src]})`;
+    }
+    b.onclick=()=>toolDrawer(o.t.id);
+    box.appendChild(b);
+  });
+  const variable = sum(V.tools.filter(o=>o.t.model==='usage').map(o=>o.proj));
+  $('#c1insight').innerHTML = !V.total ? '' : variable===0
+    ? `<b>All AI spend here is fixed seat contracts, so it can't go over budget.</b> The risk in this department is unused seats (Chart 3).`
+    : `<b>Pay-per-use tools are ${pct(variable/V.total)} of spend but carry all of the overrun risk.</b> Seat contracts can't overrun, but they can be wasted (Chart 3).`;
+}
+
+function niceStep(max){ for(const s of [500,1000,2000,2500,5000,10000,20000,25000]) if(max/s<=5) return s; return 50000; }
+function renderTrend(V){
+  const W=680,H=290,ml=56,mr=18,mt=22,mb=44, iw=W-ml-mr, ih=H-mt-mb, n=MONTHS.length;
+  const totals = MONTHS.map((_,i)=>sum(V.series.map(s=>s.vals[i])));
+  const top = Math.max(...totals, V.budget)*1.08;
+  const step = niceStep(top), ymax = Math.ceil(top/step)*step;
+  const sy = v => mt + ih - v/ymax*ih;
+  const colW = iw/n, bw = colW*0.56;
+  let g='';
+  for(let v=0; v<=ymax; v+=step){
+    g+=`<line x1="${ml}" x2="${W-mr}" y1="${sy(v)}" y2="${sy(v)}" style="stroke:var(--line)" stroke-width="1"/>`;
+    g+=`<text x="${ml-8}" y="${sy(v)+4}" text-anchor="end" style="fill:var(--muted)">${v?('$'+v/1000+'K'):'$0'}</text>`;
+  }
+  const xf = ml+FC*colW;
+  g+=`<rect x="${xf}" y="${mt}" width="${W-mr-xf}" height="${ih}" style="fill:var(--surface-2)"/>`;
+  g+=`<text x="${xf+6}" y="${mt+12}" style="fill:var(--muted)">Forecast</text>`;
+  MONTHS.forEach((m,i)=>{
+    const x = ml+i*colW+(colW-bw)/2; let acc=0; const fc=i>=FC;
+    let tip = `${m}${i===5?' (projected)':fc?' (forecast)':''}: ${k(totals[i])}`;
+    let rects='';
+    V.series.forEach(s=>{
+      const v=s.vals[i]; if(!v) return;
+      const y0=sy(acc), y1=sy(acc+v); acc+=v;
+      rects+=`<rect x="${x}" y="${y1}" width="${bw}" height="${Math.max(0,y0-y1-0.6)}" style="fill:var(${s.t.color});fill-opacity:${fc?0.38:1}"/>`;
+      tip+=`\n${s.t.name}: ${k(v)}`;
+    });
+    if(fc) rects+=`<rect x="${x}" y="${sy(totals[i])}" width="${bw}" height="${sy(0)-sy(totals[i])}" style="fill:none;stroke:var(--muted)" stroke-dasharray="3 3"/>`;
+    g+=`<g><title>${esc(tip)}</title>${rects}</g>`;
+    g+=`<text x="${x+bw/2}" y="${sy(totals[i])-6}" text-anchor="middle" style="fill:var(--fg)">${k(totals[i])}</text>`;
+    g+=`<text x="${x+bw/2}" y="${H-mb+16}" text-anchor="middle" style="fill:var(--muted)">${m}</text>`;
+    if(i===5) g+=`<text x="${x+bw/2}" y="${H-mb+30}" text-anchor="middle" style="fill:var(--faint)">proj.</text>`;
+  });
+  g+=`<line x1="${ml}" x2="${W-mr}" y1="${sy(V.budget)}" y2="${sy(V.budget)}" style="stroke:var(--crit)" stroke-width="1.5" stroke-dasharray="6 4"/>`;
+  g+=`<text x="${ml+4}" y="${sy(V.budget)-6}" style="fill:var(--crit)">Budget ${k(V.budget)}</text>`;
+  $('#trend').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly AI spend by tool, June to January, with budget line and forecast">${g}</svg>`;
+  $('#trendLegend').innerHTML = V.series.map(s=>`<span><i style="background:var(${s.t.color})"></i>${esc(s.t.name)}</span>`).join('');
+  const cross = totals.findIndex((v,i)=>i>=5 && v>V.budget);
+  const growth = totals[0] ? Math.round((totals[5]/totals[0]-1)*100) : 0;
+  let msg = `<b>Up ${growth}% since June.</b> `;
+  if(cross===5) msg += `November is already projected over budget.`;
+  else if(cross>5) msg += `At the current growth rate, spend goes over budget in <b>${MONTHS[cross]==='Jan'?'January':'December'}</b>.`;
+  else msg += `Spend stays within budget through January at the current growth rate.`;
+  const oai = V.tools.find(o=>o.t.id==='oai');
+  if(dept==='all' && oai && TREND.oai[FC]>oai.limit) msg += ` OpenAI API reaches its ${k(oai.limit)} vendor cap in December, when requests would stop.`;
+  $('#c2insight').innerHTML = msg;
+}
+
+function renderSeats(V){
+  const seat = V.tools.filter(o=>o.t.model==='seat').sort((a,b)=>b.idleCost-a.idleCost);
+  const max = Math.max(...seat.map(o=>o.seats),1);
+  const box=$('#seats'); box.innerHTML='';
+  if(!seat.length){ box.innerHTML='<p class="tsub">No seat-based AI tools in this department.</p>'; $('#c3insight').innerHTML=''; return; }
+  seat.forEach(o=>{
+    const b=document.createElement('button'); b.type='button'; b.className='brow';
+    const aw=o.active/max*100, iw=o.idle/max*100;
+    b.innerHTML=`<span class="bname"><b>${esc(o.t.name)}</b><small>${pct(o.active/o.seats)} active${o.t.stale?' · <span class="stale">synced 9 Nov</span>':''}</small></span>
+      <span class="track"><span class="seg" style="width:${aw}%;background:var(--accent);border-radius:4px 0 0 4px"></span><span class="seg" style="left:${aw}%;width:${iw}%;background:repeating-linear-gradient(135deg,var(--crit) 0 2px,var(--crit-soft) 2px 6px);border-radius:0 4px 4px 0"></span></span>
+      <span class="bval"><span class="main">${o.active} / ${o.seats} active</span><small>${o.idle} idle · <b style="color:var(--crit)">${k(o.idleCost)}/mo</b></small></span>`;
+    b.title=`${o.t.name}: ${o.idle} idle seats × $${o.t.price}`;
+    b.onclick=()=>toolDrawer(o.t.id);
+    box.appendChild(b);
+  });
+  const tot=sum(seat.map(o=>o.idleCost));
+  $('#c3insight').innerHTML = `<b>${k(tot*12)} a year</b> is going to seats that haven't been used in 30 days. Click a bar to see who holds them.`;
+}
+
+function renderShadow(V){
+  const tb=$('#shadow'); tb.innerHTML='';
+  if(!V.shadow.length){ tb.innerHTML='<tr><td colspan="6" class="tsub">No unapproved AI tools detected in this department.</td></tr>'; return; }
+  V.shadow.forEach(({s,users})=>{
+    const tr=document.createElement('tr'); tr.className='click'; tr.tabIndex=0;
+    tr.innerHTML=`<td><div class="tname">${esc(s.name)}</div><div class="tsub">${esc(s.cat)}${s.expense?` · ${k(s.expense)}/mo expensed`:''}</div></td>
+      <td class="r num">${users}</td><td>${esc(s.via)}</td>
+      <td><span class="pill ${s.risk==='high'?'crit':s.risk==='medium'?'warn':'neutral'}">${s.risk[0].toUpperCase()+s.risk.slice(1)}</span></td>
+      <td class="num">${esc(s.first)}</td><td class="chev" aria-hidden="true">›</td>`;
+    tr.onclick=()=>shadowDrawer(s.id);
+    tr.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();shadowDrawer(s.id);} };
+    tb.appendChild(tr);
+  });
+}
+
+function renderFoot(){
+  $('#foot').innerHTML = `<span><b>Sources:</b> OpenAI Admin API · Anthropic Usage and Cost API · Microsoft Graph · GitHub Copilot API · Google Workspace and Okta sign-ins · Ramp · Workday</span>
+    <span class="stale">GitHub Copilot last synced 9 Nov (3 days ago)</span>
+    <span>"Active" = used in last 30 days</span><span>◆ vendor cap · ◇ CloudEagle budget</span>`;
+}
+
+function render(){
+  const V=view();
+  renderAttention(V); renderKPIs(V); renderBullets(V); renderTrend(V); renderSeats(V); renderShadow(V); renderFoot();
+}
+
+/* ---------- drawer ---------- */
+let lastFocus=null;
+function openDrawer(title,sub,html){
+  lastFocus=document.activeElement;
+  $('#dTitle').textContent=title; $('#dSub').innerHTML=sub; $('#dBody').innerHTML=html;
+  $('#drawer').hidden=false; $('#scrim').hidden=false; $('#dClose').focus();
+  $('#dBody').querySelectorAll('[data-proto]').forEach(b=>b.onclick=()=>toast(b.dataset.proto));
+}
+function closeDrawer(){ $('#drawer').hidden=true; $('#scrim').hidden=true; if(lastFocus) lastFocus.focus(); }
+$('#dClose').onclick=closeDrawer; $('#scrim').onclick=closeDrawer;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !$('#drawer').hidden) closeDrawer(); });
+
+function deptRows(entries,maxVal,fmt){
+  return `<div class="minirows">${entries.map(([d,v,l])=>`<div class="minirow"><span>${esc(DN[d])}</span><span class="track"><span class="seg" style="width:${v/maxVal*100}%;background:var(--accent)"></span>${l?`<span class="limit" style="left:calc(${Math.min(l/maxVal,1)*100}% - 1px);top:-3px;bottom:-3px"></span>`:''}</span><span class="num">${fmt(v,l)}</span></div>`).join('')}</div>`;
+}
+
+function toolDrawer(id){
+  const t=TMAP[id]; const V=view(); const o=V.tools.find(x=>x.t.id===id); if(!o) return;
+  const inD = d => dept==='all' || d===dept;
+  const scope = dept==='all'?'All departments':DN[dept];
+  let html='';
+  if(t.model==='usage'){
+    html+=`<div class="stats">
+      <div class="stat"><div class="lab">Spent so far</div><div class="v">${k(o.mtd)}</div></div>
+      <div class="stat"><div class="lab">Projected month-end</div><div class="v">${k(o.proj)}</div></div>
+      <div class="stat"><div class="lab">Limit</div><div class="v">${k(o.limit)}</div></div>
+      <div class="stat"><div class="lab">Of limit</div><div class="v" style="color:var(--${o.status==='over'?'crit':o.status==='near'?'warn':'ok'})">${pct(o.p)}</div></div></div>`;
+    html+=`<div class="callout">${SYM[o.src]} ${o.src==='vendor'?'<b>Vendor spend cap.</b> Set in the vendor console and imported. When it is reached, the vendor stops API requests.':'<b>CloudEagle budget.</b> Set by your team in CloudEagle. It sends alerts but cannot stop spend at the vendor.'}</div>`;
+    const ents = Object.entries(t.proj).filter(([d])=>inD(d)).map(([d,v])=>[d,v,t.budget[d]]).sort((a,b)=>b[1]-a[1]);
+    const mx = Math.max(...ents.map(e=>Math.max(e[1],e[2]||0)))*1.05;
+    html+=`<div><h4>Projected spend by department vs budget</h4>${deptRows(ents,mx,(v,l)=>`${k(v)} / ${k(l)}`)}</div>`;
+    if(t.projects){
+      const pr=t.projects.filter(([,d])=>inD(d));
+      html+=`<div><h4>Top API projects</h4><table><thead><tr><th>Project</th><th>Owner</th><th class="r">Projected</th></tr></thead><tbody>${pr.map(([p,d,v])=>`<tr><td><code class="num">${esc(p)}</code></td><td>${esc(DN[d])}</td><td class="r num">${k(v)}</td></tr>`).join('')}</tbody></table></div>`;
+    }
+    html+=`<dl class="kv"><dt>Billing</dt><dd>Pay per use</dd><dt>Data source</dt><dd>${esc(t.source)}</dd><dt>Last sync</dt><dd>${t.sync} Nov 2026</dd>${t.lowConfidence?'<dt>Confidence</dt><dd><span class="pill warn">Low</span> No admin API. Estimated from card transactions.</dd>':''}</dl>`;
+    html+=`<div class="actions"><button class="btn primary" type="button" data-proto="Adjust budget would open the budget editor for this tool.">Adjust budget</button><button class="btn" type="button" data-proto="Notify owners would message each project owner with their spend and limit.">Notify owners</button></div>`;
+    openDrawer(t.name,`${esc(t.vendor)} · ${esc(scope)}`,html);
+  } else {
+    html+=`<div class="stats">
+      <div class="stat"><div class="lab">Paid seats</div><div class="v">${o.seats}</div></div>
+      <div class="stat"><div class="lab">Active (30 days)</div><div class="v">${o.active}</div></div>
+      <div class="stat"><div class="lab">Idle seats</div><div class="v" style="color:var(--crit)">${o.idle}</div></div>
+      <div class="stat"><div class="lab">Idle cost</div><div class="v" style="color:var(--crit)">${k(o.idleCost)}/mo</div></div></div>`;
+    const ents = Object.entries(t.seats).filter(([d])=>inD(d)).map(([d,[s,a]])=>[d,a,s]).sort((x,y)=>(y[2]-y[1])-(x[2]-x[1]));
+    const mx = Math.max(...ents.map(e=>e[2]));
+    html+=`<div><h4>Active vs paid seats by department</h4>${deptRows(ents,mx,(a,s)=>`${a} / ${s}`)}</div>`;
+    const people=(IDLE[id]||[]).filter(u=>inD(u.d));
+    html+=`<div><h4>Idle seat holders · ${people.length} named examples of ${o.idle}</h4><ul class="people">${people.map((u,i)=>`<li><label for="u${id}${i}"><input type="checkbox" id="u${id}${i}" ${u.left?'checked':''}> <span><b>${esc(u.n)}</b><br><span class="tsub">${esc(DN[u.d])}</span></span></label><span class="pill ${u.left?'crit':'neutral'}">${esc(u.s)}</span></li>`).join('')||'<li class="tsub">No named examples in this department.</li>'}</ul></div>`;
+    html+=`<dl class="kv"><dt>Billing</dt><dd>${o.seats} seats × $${t.price}/month (assumed list price)</dd><dt>Renewal</dt><dd>${t.renewal}</dd><dt>Data source</dt><dd>${esc(t.source)}</dd><dt>Last sync</dt><dd>${t.stale?'<span class="stale">9 Nov 2026, 3 days old. Check the connection.</span>':t.sync+' Nov 2026'}</dd></dl>`;
+    html+=`<div class="actions"><button class="btn primary" type="button" data-proto="Reclaim would remove the selected seats in the vendor console and notify each person.">Reclaim selected seats</button><button class="btn" type="button" data-proto="This would add a seat-reduction task to the renewal on ${t.renewal}.">Plan for renewal</button></div>`;
+    openDrawer(t.name,`${esc(t.vendor)} · ${esc(scope)}`,html);
+  }
+}
+
+function leaversDrawer(){
+  const inD = d => dept==='all' || d===dept;
+  const map = {};
+  TOOLS.filter(t=>t.model==='seat').forEach(t=>(IDLE[t.id]||[]).forEach(u=>{
+    if(u.left && inD(u.d)){ (map[u.n] = map[u.n] || {u,tools:[]}).tools.push(t); }
+  }));
+  const people = Object.values(map);
+  const seats = sum(people.map(p=>p.tools.length));
+  const cost = sum(people.flatMap(p=>p.tools.map(t=>t.price)));
+  const html = `<div class="stats">
+      <div class="stat"><div class="lab">People who left</div><div class="v">${people.length}</div></div>
+      <div class="stat"><div class="lab">Paid seats still held</div><div class="v">${seats}</div></div>
+      <div class="stat"><div class="lab">Monthly cost</div><div class="v" style="color:var(--crit)">${k(cost)}</div></div>
+      <div class="stat"><div class="lab">Yearly cost</div><div class="v" style="color:var(--crit)">${k(cost*12)}</div></div></div>
+    <div><h4>Seats to reclaim</h4><ul class="people">${people.map(p=>`<li><span><b>${esc(p.u.n)}</b><br><span class="tsub">${esc(DN[p.u.d])} · ${esc(p.u.s)}</span></span><span class="tsub" style="text-align:right">${p.tools.map(t=>esc(t.name)).join('<br>')}</span></li>`).join('')}</ul></div>
+    <div class="callout">Found by matching the HR system's list of leavers against each tool's seat list.</div>
+    <div class="actions"><button class="btn primary" type="button" data-proto="Reclaim would remove all ${seats} seats in each vendor console and log it for audit.">Reclaim all ${seats} seats</button></div>`;
+  openDrawer('Former employees with paid seats', esc(dept==='all'?'All departments':DN[dept]), html);
+}
+
+function shadowDrawer(id){
+  const s=SHADOW.find(x=>x.id===id);
+  const inD = d => dept==='all' || d===dept;
+  const ents=Object.entries(s.users).filter(([d])=>inD(d)).sort((a,b)=>b[1]-a[1]);
+  const users=sum(ents.map(e=>e[1]));
+  const mx=Math.max(...ents.map(e=>e[1]));
+  const rec = s.risk==='high' ? 'Review within 7 days. If no team owns it, revoke its access and point users to an approved tool.' : s.risk==='medium' ? 'Ask the main team whether they need it. Approve with a budget, or offer an approved alternative.' : 'Low risk. Approve if a team needs it, or leave it listed.';
+  let html=`<div class="stats"><div class="stat"><div class="lab">Users</div><div class="v">${users}</div></div><div class="stat"><div class="lab">Spend</div><div class="v ${s.expense?'':'unknown'}">${s.expense?k(s.expense)+'/mo':'Unknown'}</div></div></div>
+    <dl class="kv"><dt>Detected via</dt><dd>${esc(s.viaLong)}</dd><dt>Data access</dt><dd>${esc(s.access)}</dd><dt>First seen</dt><dd>${esc(s.first)} 2026</dd><dt>Risk</dt><dd><span class="pill ${s.risk==='high'?'crit':s.risk==='medium'?'warn':'neutral'}">${s.risk[0].toUpperCase()+s.risk.slice(1)}</span></dd></dl>
+    <div><h4>Users by department</h4>${deptRows(ents.map(([d,v])=>[d,v]),mx,v=>v)}</div>
+    <div><h4>Example users</h4><ul class="people">${s.sample.map(n=>`<li><b>${esc(n)}</b></li>`).join('')}</ul></div>
+    <div class="callout"><b>Suggested next step:</b> ${rec}</div>
+    <div class="actions"><button class="btn primary" type="button" data-proto="Approve would add ${esc(s.name)} to the approved list and ask for a budget owner.">Approve</button><button class="btn" type="button" data-proto="Request review would open a security review ticket with the users and access listed.">Request review</button><button class="btn" type="button" data-proto="Block would revoke OAuth access and block sign-in through the identity provider.">Block</button></div>
+    ${s.expense?'<p class="tsub">Expensed spend is shown here but kept out of the AI spend totals until the tool is approved.</p>':''}`;
+  openDrawer(s.name,`Not approved · ${esc(s.cat)}`,html);
+}
+
+/* ---------- toast, notes, filter ---------- */
+let tt=null;
+function toast(msg){ const el=$('#toast'); el.textContent='Prototype: '+msg; el.hidden=false; clearTimeout(tt); tt=setTimeout(()=>el.hidden=true,3200); }
+document.querySelectorAll('.controls [data-proto]').forEach(b=>b.onclick=()=>toast(b.dataset.proto));
+
+const tg=$('#noteToggle');
+function setNotes(on){ document.body.classList.toggle('notes-on',on); tg.setAttribute('aria-pressed',on?'true':'false'); try{localStorage.setItem('pmNotes',on?'1':'0');}catch(e){} }
+let saved=null; try{saved=localStorage.getItem('pmNotes');}catch(e){}
+setNotes(saved!=='0');
+tg.onclick=()=>setNotes(tg.getAttribute('aria-pressed')!=='true');
+
+const sel=$('#dept');
+sel.innerHTML='<option value="all">All departments</option>'+DEPTS.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join('');
+sel.onchange=()=>{ dept=sel.value; render(); };
+render();
+})();
+</script>
+
+</body>
+</html>
